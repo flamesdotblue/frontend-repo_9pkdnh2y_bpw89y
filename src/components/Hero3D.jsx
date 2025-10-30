@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Spline from '@splinetool/react-spline';
 import { Rocket, Trophy, BarChart2, Video } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -22,13 +22,29 @@ const FeatureCard = ({ icon: Icon, title, desc }) => (
 );
 
 export default function Hero3D() {
+  const [mounted, setMounted] = useState(false);
+  const [splineError, setSplineError] = useState(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <section className="relative w-full h-[60vh] md:h-[70vh] overflow-hidden rounded-3xl">
       <div className="absolute inset-0">
-        <Spline
-          scene="https://prod.spline.design/6Yk5WWguqVv3a0k8/scene.splinecode"
-          style={{ width: '100%', height: '100%' }}
-        />
+        {mounted && !splineError ? (
+          <Spline
+            scene="https://prod.spline.design/6Yk5WWguqVv3a0k8/scene.splinecode"
+            style={{ width: '100%', height: '100%' }}
+            onError={(e) => {
+              // eslint-disable-next-line no-console
+              console.error('Spline failed to load', e);
+              setSplineError('Failed to load 3D scene');
+            }}
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-b from-indigo-900/60 to-slate-900/60" />
+        )}
       </div>
 
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/20 via-black/20 to-black/60" />
@@ -57,6 +73,12 @@ export default function Hero3D() {
           <FeatureCard icon={BarChart2} title="Deep Stats" desc="Strike rates, partnership, worm & more." />
           <FeatureCard icon={Video} title="Livestream" desc="Embed your broadcast seamlessly." />
         </div>
+
+        {splineError && (
+          <div className="mt-4 text-xs text-red-300 bg-red-500/10 border border-red-400/30 rounded p-2 w-fit">
+            {splineError}
+          </div>
+        )}
       </div>
     </section>
   );
