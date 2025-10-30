@@ -34,13 +34,11 @@ class ErrorBoundary extends React.Component {
 }
 
 function applyEvent(prevState, event) {
-  // Clone state to avoid mutation
   const state = { ...prevState };
 
   if (event.type === 'UNDO') {
     const last = state.events[state.events.length - 1];
-    if (!last) return state; // nothing to undo
-    // Recompute from scratch by removing last
+    if (!last) return state;
     const remaining = state.events.slice(0, -1);
     return recomputeFromEvents({ ...state, events: remaining });
   }
@@ -68,7 +66,7 @@ function recomputeFromEvents(base) {
       }
       case 'EXTRA': {
         runs += ev.runs || 0;
-        if (ev.countsBall) balls += 1; // wides & no-balls usually not a legal ball; leg byes are
+        if (ev.countsBall) balls += 1;
         const label = ev.label || ev.subtype || 'Ex';
         lastOver.push({ label, event: 'EXTRA' });
         break;

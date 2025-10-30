@@ -5,7 +5,7 @@ export default function StatsAndStream({ state }) {
   const { runs = 0, balls = 0, wickets = 0, target = null, boundaries = { fours: 0, sixes: 0 } } = state || {};
   const runRate = balls > 0 ? (runs * 6) / balls : 0;
   const needed = target ? Math.max(target - runs, 0) : null;
-  const remainingBalls = 120 - balls; // assume T20 by default for placeholder calculations
+  const remainingBalls = 120 - balls; // default assume T20 for demo calculations
   const reqRate = target && remainingBalls > 0 ? (needed * 6) / remainingBalls : 0;
 
   return (

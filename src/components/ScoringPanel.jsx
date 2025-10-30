@@ -13,8 +13,8 @@ function Button({ children, onClick, className = '' }) {
 }
 
 export default function ScoringPanel({ onUpdate }) {
-  const [localLastOver, setLocalLastOver] = useState([]); // for quick view in panel
-  const [history, setHistory] = useState([]); // local event history for undo labels
+  const [localLastOver, setLocalLastOver] = useState([]);
+  const [history, setHistory] = useState([]);
 
   const pushBallLabel = (label, event) => {
     setLocalLastOver(prev => {
@@ -26,12 +26,13 @@ export default function ScoringPanel({ onUpdate }) {
   };
 
   const addRun = (runs) => {
+    if (!onUpdate) return;
     onUpdate({ type: 'RUN', runs, countsBall: true });
     pushBallLabel(String(runs), 'RUN');
   };
 
   const addExtra = (kind) => {
-    // wides/noballs/leg-byes count as extras. Wides & No-balls do not count a legal ball.
+    if (!onUpdate) return;
     if (kind === 'WD') {
       onUpdate({ type: 'EXTRA', subtype: 'WIDE', runs: 1, countsBall: false, label: 'Wd' });
       pushBallLabel('Wd', 'EXTRA');
@@ -45,11 +46,13 @@ export default function ScoringPanel({ onUpdate }) {
   };
 
   const wicket = () => {
+    if (!onUpdate) return;
     onUpdate({ type: 'WICKET', countsBall: true });
     pushBallLabel('W', 'WICKET');
   };
 
   const undo = () => {
+    if (!onUpdate) return;
     onUpdate({ type: 'UNDO' });
     setHistory(prev => prev.slice(0, -1));
     setLocalLastOver(prev => prev.slice(0, -1));
