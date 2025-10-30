@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Users, Target, TimerReset } from 'lucide-react';
+import { Users, Target, Timer } from 'lucide-react';
 
 export default function LiveScoreboard({ match }) {
   const {
@@ -44,7 +44,7 @@ export default function LiveScoreboard({ match }) {
         <div className="rounded-xl bg-white/5 p-4">
           <div className="flex items-center justify-between text-xs uppercase tracking-wider text-slate-300">
             <span>Over</span>
-            <TimerReset className="h-4 w-4" />
+            <Timer className="h-4 w-4" />
           </div>
           <div className="mt-1 grid grid-cols-6 gap-1">
             {[...Array(6)].map((_, i) => (
