@@ -1,43 +1,108 @@
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import Hero3D from './components/Hero3D';
 import LiveScoreboard from './components/LiveScoreboard';
 import ScoringPanel from './components/ScoringPanel';
 import StatsAndStream from './components/StatsAndStream';
 
+function applyEvent(prevState, event) {
+  // Clone state to avoid mutation
+  const state = { ...prevState };
+
+  if (event.type === 'UNDO') {
+    const last = state.events[state.events.length - 1];
+    if (!last) return state; // nothing to undo
+    // Recompute from scratch by removing last
+    const remaining = state.events.slice(0, -1);
+    return recomputeFromEvents({ ...state, events: remaining });
+  }
+
+  const newEvents = [...state.events, event];
+  return recomputeFromEvents({ ...state, events: newEvents });
+}
+
+function recomputeFromEvents(base) {
+  let runs = 0;
+  let wickets = 0;
+  let balls = 0;
+  let boundaries = { fours: 0, sixes: 0 };
+  const lastOver = [];
+
+  for (const ev of base.events) {
+    switch (ev.type) {
+      case 'RUN': {
+        runs += ev.runs || 0;
+        if (ev.countsBall) balls += 1;
+        if (ev.runs === 4) boundaries.fours += 1;
+        if (ev.runs === 6) boundaries.sixes += 1;
+        lastOver.push({ label: String(ev.runs), event: 'RUN' });
+        break;
+      }
+      case 'EXTRA': {
+        runs += ev.runs || 0;
+        if (ev.countsBall) balls += 1; // wides & no-balls usually not a legal ball; leg byes are
+        const label = ev.label || ev.subtype || 'Ex';
+        lastOver.push({ label, event: 'EXTRA' });
+        break;
+      }
+      case 'WICKET': {
+        wickets += 1;
+        balls += ev.countsBall ? 1 : 0;
+        lastOver.push({ label: 'W', event: 'WICKET' });
+        break;
+      }
+      default:
+        break;
+    }
+    if (lastOver.length > 6) lastOver.shift();
+  }
+
+  const runRate = balls > 0 ? (runs * 6) / balls : 0;
+  return {
+    ...base,
+    runs,
+    wickets,
+    balls,
+    runRate,
+    boundaries,
+    lastOver,
+  };
+}
+
 export default function App() {
-  const [match, setMatch] = useState({});
+  const [state, setState] = useState({
+    battingTeam: 'Strikers',
+    bowlingTeam: 'Titans',
+    target: null,
+    events: [],
+    runs: 0,
+    wickets: 0,
+    balls: 0,
+    runRate: 0,
+    boundaries: { fours: 0, sixes: 0 },
+    lastOver: [],
+  });
+
+  const handleUpdate = useCallback((event) => {
+    setState(prev => applyEvent(prev, event));
+  }, []);
+
+  const pageBg = useMemo(() => (
+    'min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900'
+  ), []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white">
-      <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
+    <div className={pageBg}>
+      <div className="max-w-7xl mx-auto px-4 py-6 md:py-10">
         <Hero3D />
 
-        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="md:col-span-2">
-            <LiveScoreboard match={match} />
-            <div className="mt-4">
-              <StatsAndStream />
-            </div>
-          </div>
-          <div className="md:col-span-1">
-            <ScoringPanel onUpdate={(data) => {
-              const overs = `${Math.floor((data.balls)/6)}.${(data.balls)%6}`;
-              const rr = ((data.runs) / (data.balls/6)).toFixed(2);
-              setMatch({
-                home: 'Strikers',
-                away: 'Warriors',
-                score: `${data.runs}/${data.wickets}`,
-                overs,
-                runRate: isFinite(rr) ? rr : '0.00',
-                wickets: data.wickets,
-                target: 185,
-              });
-            }} />
-          </div>
+        <div className="mt-6 grid grid-cols-1 gap-4">
+          <LiveScoreboard state={state} />
+          <StatsAndStream state={state} />
+          <ScoringPanel onUpdate={handleUpdate} />
         </div>
 
-        <footer className="mt-10 text-center text-sm text-slate-400">
-          Built for precision scoring, data-rich analysis, and immersive viewing.
+        <footer className="mt-8 text-center text-white/60 text-xs">
+          Built for ultra high-fidelity live scoring with 3D visuals.
         </footer>
       </div>
     </div>

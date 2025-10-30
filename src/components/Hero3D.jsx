@@ -1,61 +1,62 @@
 import React from 'react';
 import Spline from '@splinetool/react-spline';
+import { Rocket, Trophy, BarChart2, Video } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Rocket, Trophy, BarChart2, Play } from 'lucide-react';
+
+const FeatureCard = ({ icon: Icon, title, desc }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true }}
+    transition={{ duration: 0.5 }}
+    className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-4 flex items-start gap-3 shadow-lg"
+  >
+    <div className="p-2 rounded-lg bg-white/10 text-white">
+      <Icon className="w-5 h-5" />
+    </div>
+    <div>
+      <h4 className="text-white font-semibold">{title}</h4>
+      <p className="text-white/80 text-sm">{desc}</p>
+    </div>
+  </motion.div>
+);
 
 export default function Hero3D() {
   return (
-    <section className="relative h-[70vh] w-full overflow-hidden rounded-2xl bg-slate-900">
+    <section className="relative w-full h-[60vh] md:h-[70vh] overflow-hidden rounded-3xl">
       <div className="absolute inset-0">
-        {/* 3D Scene */}
         <Spline
-          scene="https://prod.spline.design/dqFV6s7w9m3wQ0Rm/scene.splinecode"
+          scene="https://prod.spline.design/6Yk5WWguqVv3a0k8/scene.splinecode"
           style={{ width: '100%', height: '100%' }}
         />
       </div>
 
-      {/* Ambient gradient overlay that doesn't block interactions */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-slate-900/10" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/20 via-black/20 to-black/60" />
 
-      <div className="relative z-10 flex h-full flex-col items-center justify-end p-6 sm:p-10">
+      <div className="relative z-10 h-full flex flex-col justify-center p-6 md:p-10">
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="mb-3 text-center text-3xl font-extrabold tracking-tight text-white sm:text-5xl"
+          className="text-3xl md:text-5xl font-extrabold text-white drop-shadow"
         >
-          Ultra High-Fidelity 3D Cricket Scoring
+          Ultra 3D Cricket Scoring
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.1 }}
-          className="mb-6 max-w-2xl text-center text-slate-200/90"
+          transition={{ duration: 0.7, delay: 0.1 }}
+          className="mt-2 md:mt-4 text-white/90 max-w-2xl"
         >
-          Real-time scoring, rich statistics, and seamless livestreaming — crafted to outpace today’s best platforms.
+          Real-time scoring, rich analytics, and smooth 3D visuals that elevate your match experience beyond anything you’ve used before.
         </motion.p>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, delay: 0.15 }}
-          className="grid w-full max-w-3xl grid-cols-2 gap-3 sm:grid-cols-4"
-        >
-          {[
-            { icon: Rocket, label: 'Ultra Smooth' },
-            { icon: Trophy, label: 'Pro Grade' },
-            { icon: BarChart2, label: 'Deep Stats' },
-            { icon: Play, label: 'Live Stream' },
-          ].map((f, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white backdrop-blur-md"
-            >
-              <f.icon className="h-4 w-4 text-emerald-400" />
-              <span className="text-sm">{f.label}</span>
-            </div>
-          ))}
-        </motion.div>
+        <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl">
+          <FeatureCard icon={Rocket} title="Lightning Fast" desc="Instant updates with silky transitions." />
+          <FeatureCard icon={Trophy} title="Match Ready" desc="Designed for live scoring and tournaments." />
+          <FeatureCard icon={BarChart2} title="Deep Stats" desc="Strike rates, partnership, worm & more." />
+          <FeatureCard icon={Video} title="Livestream" desc="Embed your broadcast seamlessly." />
+        </div>
       </div>
     </section>
   );

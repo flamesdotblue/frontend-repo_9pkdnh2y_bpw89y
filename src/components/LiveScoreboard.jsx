@@ -1,60 +1,76 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Users, Target, Timer } from 'lucide-react';
+import { Trophy, Timer, Target } from 'lucide-react';
 
-export default function LiveScoreboard({ match }) {
+function formatOvers(balls) {
+  const overs = Math.floor(balls / 6);
+  const rem = balls % 6;
+  return `${overs}.${rem}`;
+}
+
+export default function LiveScoreboard({ state }) {
   const {
-    home = 'Team A',
-    away = 'Team B',
-    score = '142/3',
-    overs = '17.2',
-    runRate = '8.19',
-    wickets = 3,
-    target = 185,
-  } = match || {};
+    battingTeam = 'Team A',
+    bowlingTeam = 'Team B',
+    runs = 0,
+    wickets = 0,
+    balls = 0,
+    runRate = 0,
+    target = null,
+    lastOver = [],
+  } = state || {};
 
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="rounded-2xl border border-white/10 bg-slate-900/70 p-4 text-white backdrop-blur-xl"
-    >
-      <div className="mb-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Users className="h-5 w-5 text-emerald-400" />
-          <h2 className="text-lg font-semibold">{home} vs {away}</h2>
+    <section className="w-full rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md p-5 text-white">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-green-500/20 border border-green-300/30">
+            <Trophy className="w-5 h-5 text-green-300" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold">{battingTeam} vs {bowlingTeam}</h3>
+            <p className="text-white/70 text-sm">Live Scoreboard</p>
+          </div>
         </div>
-        <div className="flex items-center gap-2 text-sm text-slate-200/80">
-          <Target className="h-4 w-4" /> Target {target}
+        <div className="text-right">
+          <div className="text-3xl font-extrabold">
+            {runs}/{wickets}
+          </div>
+          <div className="text-white/70 text-sm">Overs: {formatOvers(balls)} • RR: {runRate.toFixed(2)}</div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className="col-span-2 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-400/10 p-4">
-          <div className="text-4xl font-extrabold tracking-tight">{score}</div>
-          <div className="mt-1 text-sm text-slate-200/80">Overs {overs} • Wickets {wickets}</div>
+      <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+          <div className="text-xs text-white/60 flex items-center gap-2"><Timer className="w-4 h-4" /> Current Run Rate</div>
+          <div className="text-xl font-bold">{runRate.toFixed(2)}</div>
         </div>
-
-        <div className="rounded-xl bg-white/5 p-4">
-          <div className="text-xs uppercase tracking-wider text-slate-300">Run Rate</div>
-          <div className="mt-1 text-2xl font-bold">{runRate}</div>
+        <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+          <div className="text-xs text-white/60 flex items-center gap-2"><Target className="w-4 h-4" /> Target</div>
+          <div className="text-xl font-bold">{target ? target : '-'}{target ? ` (${target - runs} needed)` : ''}</div>
         </div>
-
-        <div className="rounded-xl bg-white/5 p-4">
-          <div className="flex items-center justify-between text-xs uppercase tracking-wider text-slate-300">
-            <span>Over</span>
-            <Timer className="h-4 w-4" />
-          </div>
-          <div className="mt-1 grid grid-cols-6 gap-1">
-            {[...Array(6)].map((_, i) => (
-              <span key={i} className="flex h-8 items-center justify-center rounded-md bg-slate-800 text-sm">
-                {['1','4','•','2','W','1'][i]}
-              </span>
-            ))}
-          </div>
+        <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+          <div className="text-xs text-white/60">Wickets</div>
+          <div className="text-xl font-bold">{wickets}</div>
+        </div>
+        <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+          <div className="text-xs text-white/60">Overs</div>
+          <div className="text-xl font-bold">{formatOvers(balls)}</div>
         </div>
       </div>
-    </motion.section>
+
+      <div className="mt-4">
+        <div className="text-xs text-white/60">Last Over</div>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {lastOver.length === 0 && (
+            <span className="text-white/60 text-sm">No balls recorded yet.</span>
+          )}
+          {lastOver.map((b, idx) => (
+            <span key={idx} className={`px-2 py-1 rounded-lg text-sm border ${b.event === 'WICKET' ? 'bg-red-500/20 border-red-400/40' : 'bg-white/10 border-white/20'}`}>
+              {b.label}
+            </span>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }

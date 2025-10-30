@@ -1,114 +1,96 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { RotateCcw, Settings } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
 
-const ballOptions = [
-  { label: '0', val: 0 },
-  { label: '1', val: 1 },
-  { label: '2', val: 2 },
-  { label: '3', val: 3 },
-  { label: '4', val: 4 },
-  { label: '6', val: 6 },
-];
-
-const specialOptions = [
-  { label: 'Wd', type: 'wide' },
-  { label: 'Nb', type: 'noball' },
-  { label: 'Lb', type: 'legbye' },
-  { label: 'W', type: 'wicket' },
-];
+function Button({ children, onClick, className = '' }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-white hover:bg-white/10 transition-colors ${className}`}
+    >
+      {children}
+    </button>
+  );
+}
 
 export default function ScoringPanel({ onUpdate }) {
-  const [localScore, setLocalScore] = useState({ runs: 142, wickets: 3, balls: 104 });
+  const [localLastOver, setLocalLastOver] = useState([]); // for quick view in panel
+  const [history, setHistory] = useState([]); // local event history for undo labels
 
-  const addRuns = (runs) => {
-    setLocalScore((s) => {
-      const balls = s.balls + 1; // legal delivery
-      const next = { ...s, runs: s.runs + runs, balls };
-      onUpdate?.(next);
+  const pushBallLabel = (label, event) => {
+    setLocalLastOver(prev => {
+      const next = [...prev, { label, event }];
+      if (next.length > 6) next.shift();
       return next;
     });
+    setHistory(prev => [...prev, { label, event }]);
   };
 
-  const special = (type) => {
-    setLocalScore((s) => {
-      let next = { ...s };
-      if (type === 'wicket') next = { ...next, wickets: next.wickets + 1, balls: next.balls + 1 };
-      else if (type === 'wide' || type === 'noball') next = { ...next, runs: next.runs + 1 }; // extra, no ball count
-      else if (type === 'legbye') next = { ...next, balls: next.balls + 1 };
-      onUpdate?.(next);
-      return next;
-    });
+  const addRun = (runs) => {
+    onUpdate({ type: 'RUN', runs, countsBall: true });
+    pushBallLabel(String(runs), 'RUN');
+  };
+
+  const addExtra = (kind) => {
+    // wides/noballs/leg-byes count as extras. Wides & No-balls do not count a legal ball.
+    if (kind === 'WD') {
+      onUpdate({ type: 'EXTRA', subtype: 'WIDE', runs: 1, countsBall: false, label: 'Wd' });
+      pushBallLabel('Wd', 'EXTRA');
+    } else if (kind === 'NB') {
+      onUpdate({ type: 'EXTRA', subtype: 'NOBALL', runs: 1, countsBall: false, label: 'Nb' });
+      pushBallLabel('Nb', 'EXTRA');
+    } else if (kind === 'LB') {
+      onUpdate({ type: 'EXTRA', subtype: 'LEGBYE', runs: 1, countsBall: true, label: 'Lb' });
+      pushBallLabel('Lb', 'EXTRA');
+    }
+  };
+
+  const wicket = () => {
+    onUpdate({ type: 'WICKET', countsBall: true });
+    pushBallLabel('W', 'WICKET');
   };
 
   const undo = () => {
-    setLocalScore((s) => {
-      const next = { ...s, runs: Math.max(0, s.runs - 1) };
-      onUpdate?.(next);
-      return next;
-    });
+    onUpdate({ type: 'UNDO' });
+    setHistory(prev => prev.slice(0, -1));
+    setLocalLastOver(prev => prev.slice(0, -1));
   };
 
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="rounded-2xl border border-white/10 bg-slate-900/70 p-4 text-white backdrop-blur-xl"
-    >
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Scoring Controls</h3>
-        <button className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-3 py-1.5 text-sm hover:bg-white/15">
-          <Settings className="h-4 w-4" /> Settings
-        </button>
+    <section className="w-full rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md p-5 text-white">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-bold">Scoring Controls</h3>
+        <Button onClick={undo} className="flex items-center gap-2">
+          <RotateCcw className="w-4 h-4" /> Undo
+        </Button>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
-        {ballOptions.map((b) => (
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            key={b.label}
-            onClick={() => addRuns(b.val)}
-            className="rounded-xl bg-emerald-500/20 py-3 font-semibold text-emerald-300 ring-1 ring-inset ring-emerald-400/30 hover:bg-emerald-500/30"
-          >
-            {b.label}
-          </motion.button>
+      <div className="grid grid-cols-7 gap-2">
+        {[0,1,2,3,4,6].map(n => (
+          <Button key={n} onClick={() => addRun(n)}>{n}</Button>
         ))}
+        <Button onClick={() => addRun(5)}>5</Button>
       </div>
 
-      <div className="mt-3 grid grid-cols-4 gap-3">
-        {specialOptions.map((s) => (
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            key={s.label}
-            onClick={() => special(s.type)}
-            className="rounded-xl bg-white/10 py-3 font-semibold text-white ring-1 ring-inset ring-white/15 hover:bg-white/15"
-          >
-            {s.label}
-          </motion.button>
-        ))}
+      <div className="mt-4 grid grid-cols-3 gap-2">
+        <Button onClick={() => addExtra('WD')}>Wide</Button>
+        <Button onClick={() => addExtra('NB')}>No Ball</Button>
+        <Button onClick={() => addExtra('LB')}>Leg Bye</Button>
       </div>
 
-      <div className="mt-3 flex items-center justify-between">
-        <div className="text-sm text-slate-300">Runs: {localScore.runs} • Wkts: {localScore.wickets} • Balls: {localScore.balls}</div>
-        <div className="flex items-center gap-2">
-          <button onClick={undo} className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-3 py-1.5 text-sm hover:bg-white/15">
-            <RotateCcw className="h-4 w-4" /> Undo
-          </button>
+      <div className="mt-4">
+        <Button onClick={wicket} className="w-full bg-red-500/20 border-red-400/40 hover:bg-red-500/30">Wicket</Button>
+      </div>
+
+      <div className="mt-4">
+        <div className="text-xs text-white/60">Panel Last Over</div>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {localLastOver.map((b, idx) => (
+            <span key={idx} className={`px-2 py-1 rounded-lg text-sm border ${b.event === 'WICKET' ? 'bg-red-500/20 border-red-400/40' : 'bg-white/10 border-white/20'}`}>
+              {b.label}
+            </span>
+          ))}
         </div>
       </div>
-
-      <AnimatePresence>
-        <motion.div
-          key={`${localScore.runs}-${localScore.wickets}-${localScore.balls}`}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          className="mt-3 rounded-xl bg-gradient-to-r from-emerald-500/10 to-emerald-400/10 p-3 text-sm text-emerald-200"
-        >
-          Last update → Runs {localScore.runs}, Wickets {localScore.wickets}, Balls {localScore.balls}
-        </motion.div>
-      </AnimatePresence>
-    </motion.section>
+    </section>
   );
 }
